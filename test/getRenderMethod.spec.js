@@ -1,10 +1,10 @@
 /*!
  * Copyright (c) 2026 Digital Bazaar, Inc. All rights reserved.
  */
-import {describe, expect, it, vi} from 'vitest';
 import {
-  getRenderMethod, RenderMethodNotFoundError, SUMMARY_RENDER_METHOD
+  DATA_VIEW_RENDER_METHOD, getRenderMethod, RenderMethodNotFoundError
 } from '../lib/index.js';
+import {describe, expect, it, vi} from 'vitest';
 
 const SVG = '<svg></svg>';
 
@@ -82,19 +82,19 @@ describe('asking for a render method', () => {
   });
 
   // "we can always generate one if not present" -- so this path never fails
-  describe('the computed type', () => {
+  describe('the data view', () => {
     it('is produced when asked for by name, declared or not', async () => {
       for(const c of [credential(), credential([svgMethod])]) {
         const method = await getRenderMethod({
-          credential: c, selectors: {type: SUMMARY_RENDER_METHOD}
+          credential: c, selectors: {type: DATA_VIEW_RENDER_METHOD}
         });
-        expect(method.type).toBe(SUMMARY_RENDER_METHOD);
+        expect(method.type).toBe(DATA_VIEW_RENDER_METHOD);
       }
     });
 
     it('carries what the credential says about itself', async () => {
       const method = await getRenderMethod({
-        credential: credential(), selectors: {type: SUMMARY_RENDER_METHOD}
+        credential: credential(), selectors: {type: DATA_VIEW_RENDER_METHOD}
       });
       expect(method.title).toBe('Movie Ticket');
       expect(method.fields).toEqual([{label: 'Seat', value: 'A1'}]);
@@ -107,7 +107,7 @@ describe('asking for a render method', () => {
       }];
       const method = await getRenderMethod({
         credential: credential(),
-        selectors: {type: SUMMARY_RENDER_METHOD},
+        selectors: {type: DATA_VIEW_RENDER_METHOD},
         defaults: {cardDesigns}
       });
       expect(method.title).toBe('A1');
@@ -116,7 +116,7 @@ describe('asking for a render method', () => {
     it('is what a caller naming no type gets when nothing is declared',
       async () => {
         const method = await getRenderMethod({credential: credential()});
-        expect(method.type).toBe(SUMMARY_RENDER_METHOD);
+        expect(method.type).toBe(DATA_VIEW_RENDER_METHOD);
       });
   });
 
@@ -131,6 +131,17 @@ describe('asking for a render method', () => {
         expect(found, `found carries ${key}`).toHaveProperty(key);
         expect(computed, `computed carries ${key}`).toHaveProperty(key);
       }
+    });
+
+    it('says whether it was declared or made up', async () => {
+      // a caller may decline to present our own guess with the same
+      // authority as issuer-authored artwork, so it has to be able to tell
+      const found = await getRenderMethod({credential: credential([
+        svgMethod
+      ])});
+      const computed = await getRenderMethod({credential: credential()});
+      expect(found.computed).toBe(false);
+      expect(computed.computed).toBe(true);
     });
   });
 
@@ -164,7 +175,7 @@ describe('asking for a render method', () => {
           }]),
           documentLoader
         });
-        expect(method.type).toBe(SUMMARY_RENDER_METHOD);
+        expect(method.type).toBe(DATA_VIEW_RENDER_METHOD);
       });
   });
 });

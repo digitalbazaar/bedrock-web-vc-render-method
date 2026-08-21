@@ -40,6 +40,10 @@ const renderMethod = await getRenderMethod({
 });
 ```
 
+Every answer carries `type`, `computed`, `mediaType`, `accessMode` and `name`,
+whether it was found on the credential or made for it, so a caller reads one
+shape rather than guarding.
+
 ### Selectors
 
 | selector | behaviour |
@@ -48,19 +52,37 @@ const renderMethod = await getRenderMethod({
 | `mediaTypes` | A **preference**, best first. A caller offered only SVG when it asked for HTML is better served the SVG than nothing. |
 | `accessMode` | A **filter**. It decides who can perceive the rendering at all, so a caller needing `auditory` cannot use a visual one. A rendering declaring no access mode is not excluded by one. |
 
-### Always available, and not
+### The data view
 
-Asking for `SUMMARY_RENDER_METHOD` always succeeds. A credential that declares
-no render method still has a name, an issuer and fields worth showing, so one
-is computed from the credential and the `defaults` passed in.
+`DataViewRenderMethod` carries what a credential says about itself — a title,
+an image, and named fields — rather than a picture of it. The frontend decides
+how to lay that out, which is what makes one payload serve a card, a row and a
+list item alike.
+
+Asking for it always succeeds. A credential that declares no render method
+still has a name, an issuer and fields worth showing, so one is computed from
+the credential and the `defaults` passed in.
 
 Asking for any other type can fail. An html rendering cannot be invented for a
 credential whose issuer did not write one, so that throws
 `RenderMethodNotFoundError` rather than quietly returning something else.
 
-> `SUMMARY_RENDER_METHOD` is **provisional**. No such type is specified yet and
-> the name is an open question. It is shaped like a declared render method so
-> that a specified type can replace it without callers changing.
+It is named for what it **is**, not for how it was obtained. This library
+computes one when a credential declares nothing renderable, but an issuer
+could author the same payload — and arguably should, since their summary beats
+our guess. The type is the same either way; only `computed` differs:
+
+```js
+renderMethod.computed  // true when we made it up, false when the issuer wrote it
+```
+
+A caller may reasonably decline to present a computed data view with the same
+visual authority as issuer-authored artwork. That is a choice, so the
+information is there to make it.
+
+> `DataViewRenderMethod` is **provisional**. No such type is specified yet. It
+> is shaped like a declared render method so a specified type can replace it
+> without callers changing.
 
 ### Loading templates
 
@@ -86,9 +108,9 @@ passed in rather than shipped here.
 |---|---|
 | `getRenderMethod({credential, selectors, documentLoader, defaults})` | the entry point |
 | `RenderMethodNotFoundError` | carries `credentialId` and `selectors` |
-| `SUMMARY_RENDER_METHOD` | the computed type's name |
+| `DATA_VIEW_RENDER_METHOD` | the data view type's name |
 | `getRenderedDisplays`, `rankDisplays` | the pieces, for callers that need them |
-| `getCredentialSummary` | what a credential looks like when it draws nothing |
+| `getCredentialSummary` | the title, image and fields behind a data view |
 | `getValueFromPointer`, `formatString` | pointer and display-format primitives |
 | `fetchText` | the default document loader |
 
