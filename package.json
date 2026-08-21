@@ -1,0 +1,46 @@
+{
+  "name": "@bedrock/web-vc-render-method",
+  "version": "0.1.0-0",
+  "type": "module",
+  "description": "Select or generate a fully usable render method for a Verifiable Credential.",
+  "exports": "./lib/index.js",
+  "files": [
+    "lib/*"
+  ],
+  "scripts": {
+    "lint": "eslint",
+    "test": "vitest run",
+    "watch": "vitest"
+  },
+  "dependencies": {
+    "mustache": "^4.2.0"
+  },
+  "devDependencies": {
+    "@digitalbazaar/eslint-config": "^7.0.0",
+    "eslint": "^9.38.0",
+    "vitest": "^4.1.10"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "keywords": [
+    "bedrock",
+    "verifiable credentials",
+    "render method",
+    "vc"
+  ],
+  "author": {
+    "name": "Digital Bazaar, Inc.",
+    "email": "support@digitalbazaar.com",
+    "url": "https://digitalbazaar.com"
+  },
+  "license": "LicenseRef-LICENSE.md",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/digitalbazaar/bedrock-web-vc-render-method"
+  },
+  "bugs": {
+    "url": "https://github.com/digitalbazaar/bedrock-web-vc-render-method/issues"
+  },
+  "homepage": "https://github.com/digitalbazaar/bedrock-web-vc-render-method"
+}
