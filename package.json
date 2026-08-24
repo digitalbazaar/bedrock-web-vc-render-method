@@ -13,6 +13,7 @@
     "watch": "vitest"
   },
   "dependencies": {
+    "@digitalbazaar/json-pointer-primitives": "^1.0.0",
     "mustache": "^4.2.0"
   },
   "devDependencies": {
