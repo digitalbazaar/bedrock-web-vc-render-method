@@ -46,8 +46,10 @@ describe('getValueFromPointer', () => {
     expect(getValueFromPointer(CREDENTIAL, '')).toEqual(CREDENTIAL);
   });
 
-  // it used to walk the prototype chain and hand back a function. Nested
-  // cases matter: a guard applied only to the first token passes the rest.
+  // A contract test over `@digitalbazaar/json-pointer-primitives`, not over a
+  // guard in this file: `resolvePointer` reads own properties only and refuses
+  // `constructor`, `prototype` and `__proto__` outright. Nested cases are here
+  // because a guard applied only to the first token would pass the rest.
   it.each([
     '/constructor', '/toString', '/__proto__',
     '/issuer/constructor', '/issuer/toString', '/issuer/__proto__'
