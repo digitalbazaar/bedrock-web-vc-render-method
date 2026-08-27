@@ -57,6 +57,17 @@ describe('getValueFromPointer', () => {
     expect(getValueFromPointer(CREDENTIAL, pointer)).toBe('');
   });
 
+  // The refusal is not only of inherited properties. A credential carrying
+  // these as its OWN keys -- which JSON can express and a guard reading the
+  // prototype chain alone would let through -- is refused too, so a subject
+  // field named `constructor` reads as absent rather than as its value.
+  it.each(['/constructor', '/prototype', '/__proto__'])(
+    'does not resolve an own %s', pointer => {
+      const own = JSON.parse(
+        '{"constructor": "c", "prototype": "p", "__proto__": "d"}');
+      expect(getValueFromPointer(own, pointer)).toBe('');
+    });
+
   describe('a list of pointers', () => {
     it('joins with a comma by default', () => {
       expect(getValueFromPointer(CREDENTIAL, ['/name', '/issuer/id']))
