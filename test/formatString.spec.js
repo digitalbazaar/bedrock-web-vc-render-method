@@ -29,8 +29,17 @@ describe('date', () => {
     expect(formatString(value, 'date')).toBe(value);
   });
 
-  it('renders a timestamp as its UTC day', () => {
-    expect(formatString('2026-08-13T10:00:00Z', 'date')).toBe('2026-08-13');
+  // A timestamp names an instant rather than a day, so it is converted -- and
+  // the day it converts to is the reader's, not UTC's. Asserted against the
+  // same local getters the implementation uses, so the expectation holds
+  // wherever the suite runs; a literal would only be right in some zones.
+  it('renders a timestamp as the local day of that instant', () => {
+    const instant = '2026-08-13T23:00:00Z';
+    const local = new Date(instant);
+    const expected = `${local.getFullYear()}-` +
+      `${String(local.getMonth() + 1).padStart(2, '0')}-` +
+      `${String(local.getDate()).padStart(2, '0')}`;
+    expect(formatString(instant, 'date')).toBe(expected);
   });
 
   it('returns a value it cannot parse as it came', () => {
