@@ -1,10 +1,10 @@
 /*!
  * Copyright (c) 2026 Digital Bazaar, Inc.
  */
+import {afterEach, describe, expect, it, vi} from 'vitest';
 import {
   DATA_VIEW_RENDER_METHOD, getRenderMethod, RenderMethodNotFoundError
 } from '../lib/index.js';
-import {describe, expect, it, vi} from 'vitest';
 
 const SVG = '<svg></svg>';
 
@@ -19,6 +19,13 @@ const credential = (renderMethod, extra = {}) => ({
 
 const svgMethod = {type: 'SvgRenderingTemplate2024', template: SVG};
 const htmlMethod = {type: 'TemplateRenderMethod', renderSuite: 'html'};
+
+// restored here rather than at the end of a test body: a global replaced
+// inline stays replaced when an assertion above the restore fails, and every
+// later test in the run then exercises the stub instead of the real thing
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe('asking for a render method', () => {
   it('requires a credential', async () => {
@@ -81,7 +88,7 @@ describe('asking for a render method', () => {
     });
   });
 
-  // "we can always generate one if not present" -- so this path never fails
+  // the data view can always be computed, so this path never fails
   describe('the data view', () => {
     it('is produced when asked for by name, declared or not', async () => {
       for(const c of [credential(), credential([svgMethod])]) {
@@ -160,7 +167,6 @@ describe('asking for a render method', () => {
       expect(documentLoader).toHaveBeenCalledWith(
         {url: 'https://issuer.example/t.svg'});
       expect(fetchSpy).not.toHaveBeenCalled();
-      vi.unstubAllGlobals();
     });
 
     it('computes one when the only declared template cannot be loaded',
