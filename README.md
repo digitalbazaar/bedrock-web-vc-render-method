@@ -25,18 +25,20 @@ across our repos, with no two implementations covering the same ground.
 import {getRenderMethod} from '@bedrock/web-vc-render-method';
 
 // whatever the credential offers, or one computed from it
-const renderMethod = await getRenderMethod({credential});
+const renderMethod = await getRenderMethod({credential, documentLoader});
 
 // something this caller can actually mount
 const renderMethod = await getRenderMethod({
   credential,
-  selectors: {mediaTypes: ['text/html', 'image/svg+xml']}
+  selectors: {mediaTypes: ['text/html', 'image/svg+xml']},
+  documentLoader
 });
 
 // a type this caller must have -- throws if it cannot be had
 const renderMethod = await getRenderMethod({
   credential,
-  selectors: {type: 'TemplateRenderMethod'}
+  selectors: {type: 'TemplateRenderMethod'},
+  documentLoader
 });
 ```
 
@@ -88,12 +90,13 @@ information is there to make it.
 
 A render method may name a url rather than carry its template inline, so
 producing a usable one can mean fetching from an issuer-controlled host. That
-goes through `documentLoader`, never a direct call, so a deployment can route
-it through a proxy or an OHTTP relay by passing its own.
+goes through `documentLoader`, never a direct call.
 
-The default caps the response at 512KB — refusing on a declared
-`content-length` over the limit before reading a byte, and metering the stream
-otherwise — sends no referrer, and omits credentials.
+`documentLoader` is required, and there is no default. A direct fetch tells
+the issuer's host the holder's address and that this credential was opened, so
+the caller chooses how the request is made — through a proxy or an OHTTP
+relay, for example. It is called as `documentLoader({url})` and answers the
+document's text. It is required even when nothing needs to be fetched.
 
 ### Defaults
 
@@ -111,7 +114,6 @@ passed in rather than shipped here.
 | `getRenderedDisplays`, `rankDisplays` | the pieces, for callers that need them |
 | `getCredentialSummary` | the title, image and fields behind a data view |
 | `getValueFromPointer`, `formatString` | pointer and display-format primitives |
-| `fetchText` | the default document loader |
 
 ## License
 
