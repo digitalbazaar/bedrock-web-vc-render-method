@@ -2,9 +2,7 @@
  * Copyright (c) 2026 Digital Bazaar, Inc.
  */
 import {afterEach, describe, expect, it, vi} from 'vitest';
-import {
-  DATA_VIEW_RENDER_METHOD, getRenderMethod, RenderMethodNotFoundError
-} from '../lib/index.js';
+import {DATA_VIEW_RENDER_METHOD, getRenderMethod} from '../lib/index.js';
 
 const SVG = '<svg></svg>';
 
@@ -65,14 +63,14 @@ describe('asking for a render method', () => {
       await expect(getRenderMethod({
         credential: credential([svgMethod]),
         selectors: {type: 'TemplateRenderMethod'}
-      })).rejects.toThrow(RenderMethodNotFoundError);
+      })).rejects.toMatchObject({name: 'NotFoundError'});
     });
 
     it('throws when the credential declares nothing at all', async () => {
       await expect(getRenderMethod({
         credential: credential(),
         selectors: {type: 'TemplateRenderMethod'}
-      })).rejects.toThrow(RenderMethodNotFoundError);
+      })).rejects.toMatchObject({name: 'NotFoundError'});
     });
 
     it('names the credential and the selectors on the error', async () => {

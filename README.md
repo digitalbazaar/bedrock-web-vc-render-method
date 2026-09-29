@@ -48,7 +48,7 @@ shape rather than guarding.
 
 | selector | behaviour |
 |---|---|
-| `type` | **Required if given.** A named type is answered or `RenderMethodNotFoundError` is thrown. Nothing else is substituted. |
+| `type` | **Required if given.** A named type is answered or a `NotFoundError` carrying `credentialId` and `selectors` is thrown. Nothing else is substituted. |
 | `mediaTypes` | A **preference**, best first. A caller offered only SVG when it asked for HTML is better served the SVG than nothing. |
 | `accessMode` | A **filter**. It decides who can perceive the rendering at all, so a caller needing `auditory` cannot use a visual one. A rendering declaring no access mode is not excluded by one. |
 
@@ -64,8 +64,8 @@ still has a name, an issuer and fields worth showing, so one is computed from
 the credential and the `defaults` passed in.
 
 Asking for any other type can fail. An html rendering cannot be invented for a
-credential whose issuer did not write one, so that throws
-`RenderMethodNotFoundError` rather than quietly returning something else.
+credential whose issuer did not write one, so that throws a `NotFoundError`
+rather than quietly returning something else.
 
 It is named for what it **is**, not for how it was obtained. This library
 computes one when a credential declares nothing renderable, but an issuer
@@ -107,7 +107,6 @@ passed in rather than shipped here.
 | export | |
 |---|---|
 | `getRenderMethod({credential, selectors, documentLoader, defaults})` | the entry point |
-| `RenderMethodNotFoundError` | carries `credentialId` and `selectors` |
 | `DATA_VIEW_RENDER_METHOD` | the data view type's name |
 | `getRenderedDisplays`, `rankDisplays` | the pieces, for callers that need them |
 | `getCredentialSummary` | the title, image and fields behind a data view |
