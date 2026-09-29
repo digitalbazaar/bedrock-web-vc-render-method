@@ -1,15 +1,9 @@
 /*!
  * Copyright (c) 2026 Digital Bazaar, Inc.
  */
-// Nothing in this module is framework-specific -- it imports nothing at all --
-// and loading a resource a credential points at is not a UI concern. It sits
-// beside the render-method work it serves: selecting a render method off a
-// credential, computing one when it declares none, then dereferencing and
-// preparing it.
-//
-// `documentLoader` is an overloaded name. This one dereferences a url a
-// credential points at; a JSON-LD context loader is a different job with a
-// different trust model, so the two are not interchangeable.
+// A document loader for the unit tests only. The library ships none: a
+// direct fetch tells an issuer-controlled host who opened which credential,
+// so a deployment has to pass its own.
 
 // A fetched document is issuer-controlled input read into memory, so it is
 // metered rather than trusted. Generous next to a real SVG template, which
@@ -22,20 +16,6 @@ const FETCH_TIMEOUT_MS = 8000;
 
 /**
  * Fetches a text document a credential points at.
- *
- * The single place this package reaches an issuer-controlled host, so it is
- * the single place to change how that is done: a size cap, a timeout, and what
- * the request discloses. Callers that load something take a loader as a
- * parameter rather than calling `fetch` themselves, so a deployment can
- * substitute its own -- routing through a proxy or a relay, or handing over to
- * an HTTP client that caps response bodies itself -- without any of that being
- * found and edited in several modules.
- *
- * Note for a deployment: fetching a url at view time tells the host that
- * serves it the holder's address and the fact that this credential was opened,
- * on every view. `credentials: 'omit'` and `referrerPolicy: 'no-referrer'`
- * limit what is sent; they do not remove the correlation. Substituting a
- * loader is what removes it.
  *
  * @param {object} options - The options to use.
  * @param {string} options.url - The `https` url to fetch.

@@ -2,7 +2,10 @@
  * Copyright (c) 2026 Digital Bazaar, Inc.
  */
 import {afterEach, describe, expect, it, vi} from 'vitest';
-import {DATA_VIEW_RENDER_METHOD, getRenderMethod} from '../lib/index.js';
+import {
+  DATA_VIEW_RENDER_METHOD, getRenderedDisplays, getRenderMethod
+} from '../lib/index.js';
+import {fetchText as documentLoader} from './documentLoader.js';
 
 const SVG = '<svg></svg>';
 
@@ -27,21 +30,37 @@ afterEach(() => {
 
 describe('asking for a render method', () => {
   it('requires a credential', async () => {
-    await expect(getRenderMethod({})).rejects.toThrow(TypeError);
+    await expect(getRenderMethod({documentLoader})).rejects.toThrow(TypeError);
   });
+
+  // no default loader: one that fetches directly tells an issuer-controlled
+  // host who opened which credential
+  it('requires a document loader', async () => {
+    for(const selectors of [{}, {type: DATA_VIEW_RENDER_METHOD}]) {
+      await expect(getRenderMethod({credential: credential(), selectors}))
+        .rejects.toThrow(TypeError);
+    }
+  });
+
+  it('requires a document loader to produce the declared displays',
+    async () => {
+      await expect(getRenderedDisplays({credential: credential([svgMethod])}))
+        .rejects.toThrow(TypeError);
+    });
 
   describe('when the credential declares one', () => {
     it('answers it', async () => {
-      const method = await getRenderMethod({credential: credential([
-        svgMethod
-      ])});
+      const method = await getRenderMethod({
+        credential: credential([svgMethod]), documentLoader
+      });
       expect(method.type).toBe('SvgRenderingTemplate2024');
     });
 
     it('answers the one the selectors prefer', async () => {
       const method = await getRenderMethod({
         credential: credential([svgMethod, htmlMethod]),
-        selectors: {mediaTypes: ['text/html']}
+        selectors: {mediaTypes: ['text/html']},
+        documentLoader
       });
       expect(method.type).toBe('TemplateRenderMethod');
     });
@@ -49,7 +68,8 @@ describe('asking for a render method', () => {
     it('answers the exact type when one is named', async () => {
       const method = await getRenderMethod({
         credential: credential([svgMethod, htmlMethod]),
-        selectors: {type: 'TemplateRenderMethod'}
+        selectors: {type: 'TemplateRenderMethod'},
+        documentLoader
       });
       expect(method.type).toBe('TemplateRenderMethod');
     });
@@ -62,14 +82,16 @@ describe('asking for a render method', () => {
     it('throws rather than substituting another type', async () => {
       await expect(getRenderMethod({
         credential: credential([svgMethod]),
-        selectors: {type: 'TemplateRenderMethod'}
+        selectors: {type: 'TemplateRenderMethod'},
+        documentLoader
       })).rejects.toMatchObject({name: 'NotFoundError'});
     });
 
     it('throws when the credential declares nothing at all', async () => {
       await expect(getRenderMethod({
         credential: credential(),
-        selectors: {type: 'TemplateRenderMethod'}
+        selectors: {type: 'TemplateRenderMethod'},
+        documentLoader
       })).rejects.toMatchObject({name: 'NotFoundError'});
     });
 
@@ -77,7 +99,9 @@ describe('asking for a render method', () => {
       // a caller catching this needs to know which credential failed and
       // what it asked for, without re-deriving either
       const selectors = {type: 'TemplateRenderMethod'};
-      await getRenderMethod({credential: credential(), selectors}).then(
+      await getRenderMethod({
+        credential: credential(), selectors, documentLoader
+      }).then(
         () => expect.unreachable('should have thrown'),
         error => {
           expect(error.credentialId).toBe('urn:uuid:credential');
@@ -91,7 +115,8 @@ describe('asking for a render method', () => {
     it('is produced when asked for by name, declared or not', async () => {
       for(const c of [credential(), credential([svgMethod])]) {
         const method = await getRenderMethod({
-          credential: c, selectors: {type: DATA_VIEW_RENDER_METHOD}
+          credential: c, selectors: {type: DATA_VIEW_RENDER_METHOD},
+          documentLoader
         });
         expect(method.type).toBe(DATA_VIEW_RENDER_METHOD);
       }
@@ -99,7 +124,8 @@ describe('asking for a render method', () => {
 
     it('carries what the credential says about itself', async () => {
       const method = await getRenderMethod({
-        credential: credential(), selectors: {type: DATA_VIEW_RENDER_METHOD}
+        credential: credential(), selectors: {type: DATA_VIEW_RENDER_METHOD},
+        documentLoader
       });
       expect(method.title).toBe('Movie Ticket');
       expect(method.fields).toEqual([{label: 'Seat', value: 'A1'}]);
@@ -113,14 +139,17 @@ describe('asking for a render method', () => {
       const method = await getRenderMethod({
         credential: credential(),
         selectors: {type: DATA_VIEW_RENDER_METHOD},
-        defaults: {cardDesigns}
+        defaults: {cardDesigns},
+        documentLoader
       });
       expect(method.title).toBe('A1');
     });
 
     it('is what a caller naming no type gets when nothing is declared',
       async () => {
-        const method = await getRenderMethod({credential: credential()});
+        const method = await getRenderMethod({
+          credential: credential(), documentLoader
+        });
         expect(method.type).toBe(DATA_VIEW_RENDER_METHOD);
       });
   });
@@ -128,10 +157,12 @@ describe('asking for a render method', () => {
   describe('every answer, found or computed', () => {
     it('carries the same members', async () => {
       // a caller reads the same shape either way rather than guarding
-      const found = await getRenderMethod({credential: credential([
-        svgMethod
-      ])});
-      const computed = await getRenderMethod({credential: credential()});
+      const found = await getRenderMethod({
+        credential: credential([svgMethod]), documentLoader
+      });
+      const computed = await getRenderMethod({
+        credential: credential(), documentLoader
+      });
       for(const key of ['type', 'kind', 'mediaType', 'accessMode', 'name']) {
         expect(found, `found carries ${key}`).toHaveProperty(key);
         expect(computed, `computed carries ${key}`).toHaveProperty(key);
@@ -141,10 +172,12 @@ describe('asking for a render method', () => {
     it('says whether it was declared or made up', async () => {
       // a caller may decline to present our own guess with the same
       // authority as issuer-authored artwork, so it has to be able to tell
-      const found = await getRenderMethod({credential: credential([
-        svgMethod
-      ])});
-      const computed = await getRenderMethod({credential: credential()});
+      const found = await getRenderMethod({
+        credential: credential([svgMethod]), documentLoader
+      });
+      const computed = await getRenderMethod({
+        credential: credential(), documentLoader
+      });
       expect(found.computed).toBe(false);
       expect(computed.computed).toBe(true);
     });
