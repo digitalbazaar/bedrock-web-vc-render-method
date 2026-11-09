@@ -17,8 +17,8 @@
     "mustache": "^4.2.0"
   },
   "devDependencies": {
-    "@digitalbazaar/eslint-config": "^7.0.0",
-    "eslint": "^9.38.0",
+    "@digitalbazaar/eslint-config": "^10.0.0",
+    "eslint": "^10.14.0",
     "vitest": "^4.1.10"
   },
   "engines": {
